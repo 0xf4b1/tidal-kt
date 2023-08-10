@@ -13,20 +13,28 @@ import java.util.*
 import kotlin.collections.HashMap
 import kotlin.collections.HashSet
 
-class TidalApi() {
+class TidalApi(val session: Session) {
 
-    var clientId: String? = null
-    var userId: Long? = null
-    var countryCode: String = "US"
-    var locale: String = "en_US"
-    var deviceType = "BROWSER"
-    var limit: Int = 50
-    var quality = Quality.HIGH
-    var deviceCode: String? = null
-    var accessToken: String? = null
-    var refreshToken: String? = null
-    val offsets: HashMap<String, Int> = HashMap()
-    var likesTrackIds: MutableSet<Long> = HashSet()
+    class Session(val clientId: String, var callback: ((session: Session) -> Unit)?) {
+        var userId: Long? = null
+        var countryCode: String = "US"
+        var locale: String = "en_US"
+        var deviceType = "BROWSER"
+        var limit: Int = 50
+        var quality = Quality.HIGH
+        var deviceCode: String? = null
+        var accessToken: String? = null
+        var refreshToken: String? = null
+        val offsets: HashMap<String, Int> = HashMap()
+        var likesTrackIds: MutableSet<Long> = HashSet()
+
+        fun setAuth(userId: Long, countryCode: String, accessToken: String, refreshToken: String) {
+            this.userId = userId
+            this.countryCode =  countryCode
+            this.accessToken = accessToken
+            this.refreshToken = refreshToken
+        }
+    }
 
     enum class Quality {
         LOW,
@@ -34,41 +42,37 @@ class TidalApi() {
         LOSSLESS
     }
 
-    constructor(clientId: String) : this() {
-        this.clientId = clientId
-    }
-
-    constructor(userId: Long, accessToken: String, refreshToken: String) : this() {
-        this.userId = userId
-        this.accessToken = accessToken
-        this.refreshToken = refreshToken
-    }
-
     fun auth(): String {
         val res = JSONObject(
             WebRequests.post(
                 Endpoints.OAUTH2_DEVICE_AUTH,
-                "client_id=${clientId}&scope=r_usr+w_usr+w_sub"
+                "client_id=${session.clientId}&scope=r_usr+w_usr+w_sub"
             ).value
         )
-        deviceCode = res.getString("deviceCode")
+        session.deviceCode = res.getString("deviceCode")
         return res.getString("verificationUriComplete")
     }
 
     fun getAccessToken(): Boolean {
+        if (session.refreshToken == null && session.deviceCode == null)
+            throw NotAuthenticatedException("Can not get access_token without refresh_token or device_code")
         try {
             val res = JSONObject(
                 WebRequests.post(
-                    Endpoints.OAUTH2_TOKEN, "client_id=${clientId}" +
-                            "&device_code=${deviceCode}" +
-                            "&grant_type=urn:ietf:params:oauth:grant-type:device_code" +
+                    Endpoints.OAUTH2_TOKEN,
+                    "client_id=${session.clientId}" + (if (session.refreshToken != null) "&refresh_token=${session.refreshToken}" +
+                            "&grant_type=refresh_token" else "&device_code=${session.deviceCode}" +
+                            "&grant_type=urn:ietf:params:oauth:grant-type:device_code") +
                             "&scope=r_usr+w_usr+w_sub"
                 ).value
             )
             if (res.has("access_token")) {
-                userId = res.getJSONObject("user").getLong("userId")
-                accessToken = res.getString("access_token")
-                refreshToken = res.getString("refresh_token")
+                session.userId = res.getJSONObject("user").getLong("userId")
+                session.countryCode = res.getJSONObject("user").getString("countryCode")
+                session.accessToken = res.getString("access_token")
+                if (res.has("refreshToken"))
+                    session.refreshToken = res.getString("refresh_token")
+                session.callback?.let { it(session) }
                 return true
             }
         } catch (_: WebRequests.HttpException) {
@@ -77,11 +81,11 @@ class TidalApi() {
     }
 
     fun getTracks(reset: Boolean): List<Track> {
-        return parseTracksFromJSONArray(Requests.CollectionRequest(this, Endpoints.TRACKS, reset, userId).execute())
+        return parseTracksFromJSONArray(Requests.CollectionRequest(this, Endpoints.TRACKS, reset, session.userId).execute())
     }
 
     fun getArtists(reset: Boolean): List<Artist> {
-        return parseArtistsFromJSONArray(Requests.CollectionRequest(this, Endpoints.ARTISTS, reset, userId).execute())
+        return parseArtistsFromJSONArray(Requests.CollectionRequest(this, Endpoints.ARTISTS, reset, session.userId).execute())
     }
 
     fun getArtist(artist: Long, reset: Boolean): List<Track> {
@@ -133,7 +137,7 @@ class TidalApi() {
     }
 
     private fun buildTrackFromJSON(json: JSONObject): Track {
-        if (likesTrackIds.isEmpty())
+        if (session.likesTrackIds.isEmpty())
             getLikes()
 
         return Track(
@@ -143,7 +147,7 @@ class TidalApi() {
             json.getLong("duration") * 1000,
             TIDAL_RESOURCES_URL.format(json.getJSONObject("album").getString("cover").replace("-", "/")),
             json.getString("url"),
-            likesTrackIds.contains(json.getLong("id"))
+            session.likesTrackIds.contains(json.getLong("id"))
         )
     }
 
@@ -157,7 +161,7 @@ class TidalApi() {
     }
 
     fun toggleLike(trackId: String): Boolean {
-        return if (!likesTrackIds.contains(trackId.toLong()))
+        return if (!session.likesTrackIds.contains(trackId.toLong()))
             like(trackId)
         else
             unlike(trackId)
@@ -165,35 +169,35 @@ class TidalApi() {
 
     private fun like(trackId: String): Boolean {
         val result = WebRequests.post(
-            Endpoints.LIKE.route.format(userId),
-            "trackIds=$trackId&onArtifactNotFound=FAIL", mapOf("Authorization" to "Bearer $accessToken")
+            Endpoints.LIKE.route.format(session.userId),
+            "trackIds=$trackId&onArtifactNotFound=FAIL", mapOf("Authorization" to "Bearer ${session.accessToken}")
         )
         if (result.status == 200) {
-            likesTrackIds.add(trackId.toLong())
+            session.likesTrackIds.add(trackId.toLong())
             return true
         }
         return false
     }
 
     private fun unlike(trackId: String): Boolean {
-        val result = Requests.ActionRequest(this, Endpoints.UNLIKE, userId, trackId).execute()
+        val result = Requests.ActionRequest(this, Endpoints.UNLIKE, session.userId, trackId).execute()
         if (result.status == 200) {
-            likesTrackIds.remove(trackId.toLong())
+            session.likesTrackIds.remove(trackId.toLong())
             return true
         }
         return false
     }
 
     private fun getLikes() {
-        val result = Requests.ActionRequest(this, Endpoints.LIKES, userId).execute()
+        val result = Requests.ActionRequest(this, Endpoints.LIKES, session.userId).execute()
         val tracks = JSONObject(result.value).getJSONArray("TRACK")
         for (i in 0 until tracks.length()) {
-            likesTrackIds.add(tracks.getString(i).toLong())
+            session.likesTrackIds.add(tracks.getString(i).toLong())
         }
     }
 
     fun getStreamUrl(id: Long): String {
-        val res = Requests.ActionRequest(this, Endpoints.STREAM, id, quality.name).execute()
+        val res = Requests.ActionRequest(this, Endpoints.STREAM, id, session.quality.name).execute()
         if (res.status == 200) {
             val json = JSONObject(res.value)
             val manifest = String(Base64.getDecoder().decode(json.getString("manifest")))

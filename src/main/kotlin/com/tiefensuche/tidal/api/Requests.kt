@@ -18,11 +18,11 @@ class Requests {
     class CollectionEndpoint(route: String) : Endpoint(route, Method.GET)
 
     class CollectionRequest(
-        session: TidalApi,
+        api: TidalApi,
         endpoint: CollectionEndpoint,
         private val reset: Boolean,
         vararg args: Any?
-    ) : Request<JSONArray>(session, endpoint, *args) {
+    ) : Request<JSONArray>(api, endpoint, *args) {
 
         override val url = append(super.url, "limit", session.limit.toString())
 
@@ -66,7 +66,9 @@ class Requests {
         }
     }
 
-    abstract class Request<T>(val session: TidalApi, val endpoint: Endpoint, vararg args: Any?) {
+    abstract class Request<T>(val api: TidalApi, val endpoint: Endpoint, vararg args: Any?) {
+
+        val session = api.session
 
         open val url = append(
             append(
@@ -92,14 +94,14 @@ class Requests {
                 if (e.code == 401) {
                     session.accessToken = null
                     session.refreshToken?.let {
-                        session.getAccessToken()
-                        return WebRequests.request(
-                            WebRequests.createConnection(
-                                url,
-                                endpoint.method.name,
-                                mapOf("Authorization" to "Bearer ${session.accessToken}")
+                        if (api.getAccessToken())
+                            return WebRequests.request(
+                                WebRequests.createConnection(
+                                    url,
+                                    endpoint.method.name,
+                                    mapOf("Authorization" to "Bearer ${session.accessToken}")
+                                )
                             )
-                        )
                     }
                 }
                 throw e

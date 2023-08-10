@@ -11,14 +11,19 @@ import kotlin.test.Test
 
 class Test {
 
-    private val api = TidalApi(1337, "foo", "bar")
+    private val api = TidalApi(TidalApi.Session("foo", null))
 
     private fun printArtists(artists: List<Artist>) {
-        artists.forEach { println("id: ${it.id}, name: ${it.name}, artwork: ${it.artwork}") }
+        artists.forEach { println("id: ${it.id}, name: ${it.name}, artwork: ${it.artwork}, url: ${it.url}") }
     }
 
     private fun printTracks(tracks: List<Track>) {
-        tracks.forEach { println("id: ${it.id}, artist: ${it.artist}, title: ${it.title}, duration: ${it.duration}") }
+        tracks.forEach { println("id: ${it.id}, artist: ${it.artist}, title: ${it.title}, duration: ${it.duration}, artwork: ${it.artwork}, url: ${it.url}, liked: ${it.liked}") }
+    }
+
+    @BeforeTest
+    fun setAuth() {
+        api.session.setAuth(1337, "US", "foo", "bar")
     }
 
     @Test
@@ -61,5 +66,12 @@ class Test {
         val tracks = api.query("Solee", false)
         assert(tracks.isNotEmpty())
         printTracks(tracks)
+    }
+
+    @Test
+    fun testRefreshToken() {
+        api.session.accessToken = ""
+        assertTrue(api.getAccessToken())
+        println("access_token: ${api.session.accessToken}")
     }
 }
