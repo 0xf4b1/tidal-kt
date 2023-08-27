@@ -70,7 +70,7 @@ class TidalApi(val session: Session) {
                 session.userId = res.getJSONObject("user").getLong("userId")
                 session.countryCode = res.getJSONObject("user").getString("countryCode")
                 session.accessToken = res.getString("access_token")
-                if (res.has("refreshToken"))
+                if (res.has("refresh_token"))
                     session.refreshToken = res.getString("refresh_token")
                 session.callback?.let { it(session) }
                 return true
