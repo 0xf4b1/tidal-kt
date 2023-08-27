@@ -19,7 +19,7 @@ object Endpoints {
     val ARTISTS =
         Requests.CollectionEndpoint("${TIDAL_LISTEN_BASE_URL}users/%s/favorites/artists?order=DATE&orderDirection=DESC")
     val ARTIST_TRACKS =
-        Requests.CollectionEndpoint("${TIDAL_LISTEN_BASE_URL}pages/single-module-page/ae223310-a4c2-4568-a770-ffef70344441/4/889e7c2a-e3be-472b-9801-bf6b40655050/1?artistId=%s")
+        Requests.CollectionEndpoint("${TIDAL_LISTEN_BASE_URL}pages/data/25b47120-6a2f-4dbb-8a38-daa415367d22?artistId=%s")
     val MIX =
         Requests.CollectionEndpoint("${TIDAL_LISTEN_BASE_URL}pages/mix?mixId=%s")
 
