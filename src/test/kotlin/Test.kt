@@ -69,6 +69,25 @@ class Test {
     }
 
     @Test
+    fun testLike() {
+        val beforeTracks = api.getTracks(true)
+        assert(beforeTracks.isNotEmpty())
+        val beforeFirst = beforeTracks[0]
+        assert(api.toggleLike(beforeFirst.id.toString()))
+
+        val afterTracks = api.getTracks(true)
+        assert(afterTracks.isNotEmpty())
+        val afterFirst = afterTracks[0]
+        assert(beforeFirst.id != afterFirst.id)
+        assert(api.toggleLike(beforeFirst.id.toString()))
+
+        val restoreTracks = api.getTracks(true)
+        assert(afterTracks.isNotEmpty())
+        val restoreFirst = restoreTracks[0]
+        assert(beforeFirst.id == restoreFirst.id)
+    }
+
+    @Test
     fun testRefreshToken() {
         api.session.accessToken = ""
         assertTrue(api.getAccessToken())

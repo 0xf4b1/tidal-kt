@@ -170,7 +170,7 @@ class TidalApi(val session: Session) {
     private fun like(trackId: String): Boolean {
         val result = WebRequests.post(
             Endpoints.LIKE.route.format(session.userId),
-            "trackIds=$trackId&onArtifactNotFound=FAIL", mapOf("Authorization" to "Bearer ${session.accessToken}")
+            "trackIds=$trackId&onArtifactNotFound=FAIL&countryCode=${session.countryCode}", mapOf("Authorization" to "Bearer ${session.accessToken}")
         )
         if (result.status == 200) {
             session.likesTrackIds.add(trackId.toLong())
