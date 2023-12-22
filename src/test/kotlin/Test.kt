@@ -2,10 +2,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
-import com.tiefensuche.tidal.api.Artist
-import com.tiefensuche.tidal.api.Endpoints
-import com.tiefensuche.tidal.api.TidalApi
-import com.tiefensuche.tidal.api.Track
+import com.tiefensuche.tidal.api.*
 import kotlin.test.*
 import kotlin.test.Test
 
@@ -21,6 +18,10 @@ class Test {
         tracks.forEach { println("id: ${it.id}, artist: ${it.artist}, title: ${it.title}, duration: ${it.duration}, artwork: ${it.artwork}, url: ${it.url}, liked: ${it.liked}") }
     }
 
+    private fun printPlaylists(playlists: List<Playlist>) {
+        playlists.forEach { println("uuid: ${it.uuid}, title: ${it.title}, duration: ${it.duration}, artwork: ${it.artwork}") }
+    }
+
     @BeforeTest
     fun setAuth() {
         api.session.setAuth(1337, "US", "foo", "bar")
@@ -30,6 +31,7 @@ class Test {
     fun testGetArtists() {
         val first = api.getArtists(false)
         printArtists(first)
+        assert(first.isNotEmpty())
 
         val second = api.getArtists(false)
         printArtists(second)
@@ -55,10 +57,10 @@ class Test {
     }
 
     @Test
-    fun testGetMix() {
-        val tracks = api.getMix(Endpoints.Mixes.MIX_DAILY_DISCOVERY, false)
-        assert(tracks.isNotEmpty())
-        printTracks(tracks)
+    fun testGetMixes() {
+        val playlists = api.getMixes()
+        printPlaylists(playlists)
+        playlists.forEach { printTracks(api.getMix(it.uuid, false)) }
     }
 
     @Test

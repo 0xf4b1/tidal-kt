@@ -20,3 +20,10 @@ data class Track(
     val url: String,
     val liked: Boolean
 )
+
+data class Playlist(
+    val uuid: String,
+    val title: String,
+    val duration: Long,
+    val artwork: String
+)

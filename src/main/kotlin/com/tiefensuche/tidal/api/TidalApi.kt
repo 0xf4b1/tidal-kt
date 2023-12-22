@@ -81,54 +81,50 @@ class TidalApi(val session: Session) {
     }
 
     fun getTracks(reset: Boolean): List<Track> {
-        return parseTracksFromJSONArray(Requests.CollectionRequest(this, Endpoints.TRACKS, reset, session.userId).execute())
+        return parseFromJSONArray(Requests.CollectionRequest(this, Endpoints.TRACKS, reset, session.userId).execute(), ::buildTrackFromJSON)
     }
 
     fun getArtists(reset: Boolean): List<Artist> {
-        return parseArtistsFromJSONArray(Requests.CollectionRequest(this, Endpoints.ARTISTS, reset, session.userId).execute())
+        return parseFromJSONArray(Requests.CollectionRequest(this, Endpoints.ARTISTS, reset, session.userId).execute(), ::buildArtistFromJSON)
     }
 
     fun getArtist(artist: Long, reset: Boolean): List<Track> {
-        return parseTracksFromJSONArray(
-            Requests.CollectionRequest(this, Endpoints.ARTIST_TRACKS, reset, artist).execute()
-        )
+        return parseFromJSONArray(Requests.CollectionRequest(this, Endpoints.ARTIST_TRACKS, reset, artist).execute(), ::buildTrackFromJSON)
     }
 
-    fun getMix(mix: Endpoints.Mixes, reset: Boolean): List<Track> {
-        return parseTracksFromJSONArray(Requests.CollectionRequest(this, Endpoints.MIX, reset, mix.id).execute())
+    fun getMixes(): List<Playlist> {
+        val json = JSONObject(Requests.ActionRequest(this, Endpoints.HOME).execute().value).getJSONArray("rows")
+        for (i in 0 until json.length()) {
+            val modules = json.getJSONObject(i).getJSONArray("modules")
+            for (j in 0 until modules.length()) {
+                val module = modules.getJSONObject(j)
+                if (module.getString("type") != "MIX_LIST")
+                    continue
+                return parseFromJSONArray(module.getJSONObject("pagedList").getJSONArray("items"), ::buildMixFromJSON)
+            }
+        }
+        return emptyList()
+    }
+
+    fun getMix(uuid: String, reset: Boolean): List<Track> {
+        return parseFromJSONArray(Requests.CollectionRequest(this, Endpoints.MIX, reset, uuid).execute(), ::buildTrackFromJSON)
     }
 
     fun query(query: String, reset: Boolean): List<Track> {
         val tracks =
             Requests.CollectionRequest(this, Endpoints.QUERY, reset, URLEncoder.encode(query, "UTF-8")).execute()
-        return parseTracksFromJSONArray(tracks)
+        return parseFromJSONArray(tracks, ::buildTrackFromJSON)
     }
 
-    private fun parseTracksFromJSONArray(tracks: JSONArray): List<Track> {
-        val result = mutableListOf<Track>()
-        for (j in 0 until tracks.length()) {
+    private fun <T> parseFromJSONArray(json: JSONArray, func: (json: JSONObject) -> T): List<T> {
+        val result = mutableListOf<T>()
+        for (j in 0 until json.length()) {
             try {
-                var track = tracks.getJSONObject(j)
+                var track = json.getJSONObject(j)
                 if (track.has("item")) {
                     track = track.getJSONObject("item")
                 }
-                result.add(buildTrackFromJSON(track))
-            } catch (e: JSONException) {
-                // skip item
-            }
-        }
-        return result
-    }
-
-    private fun parseArtistsFromJSONArray(tracks: JSONArray): List<Artist> {
-        val result = mutableListOf<Artist>()
-        for (j in 0 until tracks.length()) {
-            try {
-                var track = tracks.getJSONObject(j)
-                if (track.has("item")) {
-                    track = track.getJSONObject("item")
-                }
-                result.add(buildArtistFromJSON(track))
+                result.add(func(track))
             } catch (e: JSONException) {
                 // skip item
             }
@@ -157,6 +153,15 @@ class TidalApi(val session: Session) {
             json.getString("name"),
             if (json.isNull("picture")) "null" else TIDAL_RESOURCES_URL.format(json.getString("picture").replace("-", "/")),
             json.getString("url")
+        )
+    }
+
+    private fun buildMixFromJSON(json: JSONObject): Playlist {
+        return Playlist(
+            json.getString("id"),
+            json.getString("title"),
+            0,
+            json.getJSONObject("images").getJSONObject("SMALL").getString("url")
         )
     }
 

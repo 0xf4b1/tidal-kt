@@ -22,11 +22,8 @@ object Endpoints {
         Requests.CollectionEndpoint("${TIDAL_LISTEN_BASE_URL}pages/data/25b47120-6a2f-4dbb-8a38-daa415367d22?artistId=%s")
     val MIX =
         Requests.CollectionEndpoint("${TIDAL_LISTEN_BASE_URL}pages/mix?mixId=%s")
-
-    enum class Mixes(val id: String) {
-        MIX_DAILY_DISCOVERY("01662f6c25aa0072685266086e3593"),
-        MIX_NEW_ARRIVALS("011c1107cf3b1894c3e426ebb968ef"),
-    }
+    val HOME =
+        Requests.Endpoint("${TIDAL_LISTEN_BASE_URL}pages/home", Requests.Method.GET)
 
     val LIKES = Requests.Endpoint(
         "${TIDAL_LISTEN_BASE_URL}users/%s/favorites/ids",
