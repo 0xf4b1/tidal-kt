@@ -64,6 +64,14 @@ class Test {
     }
 
     @Test
+    fun testGetPlaylists() {
+        val playlists = api.getPlaylists(false)
+        printPlaylists(playlists)
+        val playlist = api.getPlaylist(playlists[0].uuid, false)
+        printTracks(playlist)
+    }
+
+    @Test
     fun testQuery() {
         val tracks = api.query("Solee", false)
         assert(tracks.isNotEmpty())

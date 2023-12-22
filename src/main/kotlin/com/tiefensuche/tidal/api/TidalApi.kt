@@ -110,6 +110,14 @@ class TidalApi(val session: Session) {
         return parseFromJSONArray(Requests.CollectionRequest(this, Endpoints.MIX, reset, uuid).execute(), ::buildTrackFromJSON)
     }
 
+    fun getPlaylists(reset: Boolean): List<Playlist> {
+        return parseFromJSONArray(Requests.CollectionRequest(this, Endpoints.PLAYLISTS, reset, session.userId).execute(), ::buildPlaylistFromJSON)
+    }
+
+    fun getPlaylist(uuid: String, reset: Boolean): List<Track> {
+        return parseFromJSONArray(Requests.CollectionRequest(this, Endpoints.PLAYLIST, reset, uuid).execute(), ::buildTrackFromJSON)
+    }
+
     fun query(query: String, reset: Boolean): List<Track> {
         val tracks =
             Requests.CollectionRequest(this, Endpoints.QUERY, reset, URLEncoder.encode(query, "UTF-8")).execute()
@@ -154,6 +162,14 @@ class TidalApi(val session: Session) {
             if (json.isNull("picture")) "null" else TIDAL_RESOURCES_URL.format(json.getString("picture").replace("-", "/")),
             json.getString("url")
         )
+    }
+
+    private fun buildPlaylistFromJSON(json: JSONObject): Playlist {
+        return Playlist(
+            json.getString("uuid"),
+            json.getString("title"),
+            json.getLong("duration") * 1000,
+            TIDAL_RESOURCES_URL.format(json.getString("squareImage").replace("-", "/")))
     }
 
     private fun buildMixFromJSON(json: JSONObject): Playlist {

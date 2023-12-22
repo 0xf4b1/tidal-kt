@@ -24,6 +24,10 @@ object Endpoints {
         Requests.CollectionEndpoint("${TIDAL_LISTEN_BASE_URL}pages/mix?mixId=%s")
     val HOME =
         Requests.Endpoint("${TIDAL_LISTEN_BASE_URL}pages/home", Requests.Method.GET)
+    val PLAYLISTS =
+        Requests.CollectionEndpoint("${TIDAL_LISTEN_BASE_URL}users/%s/playlists?order=DATE_UPDATED&orderDirection=DESC")
+    val PLAYLIST =
+        Requests.CollectionEndpoint("${TIDAL_LISTEN_BASE_URL}playlists/%s/items")
 
     val LIKES = Requests.Endpoint(
         "${TIDAL_LISTEN_BASE_URL}users/%s/favorites/ids",
