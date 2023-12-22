@@ -155,7 +155,7 @@ class TidalApi(val session: Session) {
         return Artist(
             json.getLong("id"),
             json.getString("name"),
-            TIDAL_RESOURCES_URL.format(json.getString("picture").replace("-", "/")),
+            if (json.isNull("picture")) "null" else TIDAL_RESOURCES_URL.format(json.getString("picture").replace("-", "/")),
             json.getString("url")
         )
     }
