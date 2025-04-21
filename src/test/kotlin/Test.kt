@@ -59,6 +59,7 @@ class Test {
     @Test
     fun testGetMixes() {
         val playlists = api.getMixes()
+        assert(playlists.isNotEmpty())
         printPlaylists(playlists)
         playlists.forEach { printTracks(api.getMix(it.uuid, false)) }
     }

@@ -8,6 +8,7 @@ import com.tiefensuche.tidal.api.Endpoints.TIDAL_RESOURCES_URL
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+import org.json.JSONParserConfiguration
 import java.net.URLEncoder
 import java.util.*
 import kotlin.collections.HashMap
@@ -93,14 +94,11 @@ class TidalApi(val session: Session) {
     }
 
     fun getMixes(): List<Playlist> {
-        val json = JSONObject(Requests.ActionRequest(this, Endpoints.HOME).execute().value).getJSONArray("rows")
+        val response = Requests.ActionRequest(this, Endpoints.STATIC).execute().value
+        val json = JSONObject(response, JSONParserConfiguration().withOverwriteDuplicateKey(true)).getJSONArray("items")
         for (i in 0 until json.length()) {
-            val modules = json.getJSONObject(i).getJSONArray("modules")
-            for (j in 0 until modules.length()) {
-                val module = modules.getJSONObject(j)
-                if (module.getString("type") != "MIX_LIST")
-                    continue
-                return parseFromJSONArray(module.getJSONObject("pagedList").getJSONArray("items"), ::buildMixFromJSON)
+            if (json.getJSONObject(i).getString("moduleId") == "DAILY_MIXES") {
+                return parseFromJSONArray(json.getJSONObject(i).getJSONArray("items"), ::buildMixFromJSON)
             }
         }
         return emptyList()
@@ -173,11 +171,12 @@ class TidalApi(val session: Session) {
     }
 
     private fun buildMixFromJSON(json: JSONObject): Playlist {
+        val data = json.getJSONObject("data")
         return Playlist(
-            json.getString("id"),
-            json.getString("title"),
+            data.getString("id"),
+            data.getJSONObject("titleTextInfo").getString("text"),
             0,
-            json.getJSONObject("images").getJSONObject("SMALL").getString("url")
+            data.getJSONArray("mixImages").getJSONObject(0).getString("url")
         )
     }
 

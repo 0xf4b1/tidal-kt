@@ -87,7 +87,10 @@ class Requests {
                     WebRequests.createConnection(
                         url,
                         endpoint.method.name,
-                        mapOf("Authorization" to "Bearer ${session.accessToken}")
+                        mapOf(
+                            "authorization" to "Bearer ${session.accessToken}",
+                            "x-tidal-client-version" to "2025.4.15"
+                        )
                     )
                 )
             } catch (e: WebRequests.HttpException) {
@@ -99,7 +102,10 @@ class Requests {
                                 WebRequests.createConnection(
                                     url,
                                     endpoint.method.name,
-                                    mapOf("Authorization" to "Bearer ${session.accessToken}")
+                                    mapOf(
+                                        "authorization" to "Bearer ${session.accessToken}",
+                                        "x-tidal-client-version" to "2025.4.15"
+                                    )
                                 )
                             )
                     }
