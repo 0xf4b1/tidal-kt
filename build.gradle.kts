@@ -1,6 +1,7 @@
 plugins {
     kotlin("jvm") version "1.8.0"
     application
+    `maven-publish`
 }
 
 group = "com.tiefensuche"
@@ -21,4 +22,12 @@ tasks.test {
 
 kotlin {
     jvmToolchain(11)
+}
+
+publishing {
+    publications {
+        register<MavenPublication>("gpr") {
+            from(components["java"])
+        }
+    }
 }
