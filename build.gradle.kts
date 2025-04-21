@@ -12,7 +12,7 @@ repositories {
 }
 
 dependencies {
-    implementation("org.json:json:20230227")
+    implementation("org.json:json:20250107")
     testImplementation(kotlin("test"))
 }
 
