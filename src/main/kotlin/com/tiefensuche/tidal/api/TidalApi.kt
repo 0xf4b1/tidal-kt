@@ -102,8 +102,8 @@ class TidalApi(val session: Session) {
     }
 
     fun getMixes(): List<Playlist> {
-        val response = Requests.ActionRequest(this, Endpoints.STATIC).execute().value
-        val json = JSONObject(response, JSONParserConfiguration().withOverwriteDuplicateKey(true)).getJSONArray("items")
+        val response = Requests.ActionRequest(this, Endpoints.STATIC).execute().value.replace("\"type\":\"\\w+\",".toRegex(), "")
+        val json = JSONObject(response).getJSONArray("items")
         for (i in 0 until json.length()) {
             if (json.getJSONObject(i).getString("moduleId") == "DAILY_MIXES") {
                 return parseFromJSONArray(json.getJSONObject(i).getJSONArray("items"), ::buildMixFromJSON)
