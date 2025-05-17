@@ -93,6 +93,14 @@ class TidalApi(val session: Session) {
         return parseFromJSONArray(Requests.CollectionRequest(this, Endpoints.ARTIST_TRACKS, reset, artist).execute(), ::buildTrackFromJSON)
     }
 
+    fun getAlbums(reset: Boolean): List<Album> {
+        return parseFromJSONArray(Requests.CollectionRequest(this, Endpoints.ALBUMS, reset, session.userId).execute(),::buildAlbumFromJSON)
+    }
+
+    fun getAlbum(album: Long, reset: Boolean): List<Track> {
+        return parseFromJSONArray(Requests.CollectionRequest(this, Endpoints.ALBUM_TRACKS, reset, album).execute(), ::buildTrackFromJSON)
+    }
+
     fun getMixes(): List<Playlist> {
         val response = Requests.ActionRequest(this, Endpoints.STATIC).execute().value
         val json = JSONObject(response, JSONParserConfiguration().withOverwriteDuplicateKey(true)).getJSONArray("items")
@@ -157,6 +165,16 @@ class TidalApi(val session: Session) {
         return Artist(
             json.getLong("id"),
             json.getString("name"),
+            if (json.isNull("picture")) "null" else TIDAL_RESOURCES_URL.format(json.getString("picture").replace("-", "/")),
+            json.getString("url")
+        )
+    }
+
+    private fun buildAlbumFromJSON(json: JSONObject): Album {
+        return Album(
+            json.getLong("id"),
+            json.getString("title"),
+            json.getJSONObject("artist").getString("name"),
             if (json.isNull("picture")) "null" else TIDAL_RESOURCES_URL.format(json.getString("picture").replace("-", "/")),
             json.getString("url")
         )

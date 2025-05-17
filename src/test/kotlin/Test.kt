@@ -14,6 +14,10 @@ class Test {
         artists.forEach { println("id: ${it.id}, name: ${it.name}, artwork: ${it.artwork}, url: ${it.url}") }
     }
 
+    private fun printAlbums(albums: List<Album>) {
+        albums.forEach { println("id: ${it.id}, name: ${it.name}, artist: ${it.artist}, artwork: ${it.artwork}, url: ${it.url}") }
+    }
+
     private fun printTracks(tracks: List<Track>) {
         tracks.forEach { println("id: ${it.id}, artist: ${it.artist}, title: ${it.title}, duration: ${it.duration}, artwork: ${it.artwork}, url: ${it.url}, liked: ${it.liked}") }
     }
@@ -42,6 +46,25 @@ class Test {
         assertEquals(first, third)
 
         val tracks = api.getArtist(first[0].id, false)
+        assert(tracks.isNotEmpty())
+        printTracks(tracks)
+    }
+
+    @Test
+    fun testGetAlbums() {
+        val first = api.getAlbums(false)
+        printAlbums(first)
+        assert(first.isNotEmpty())
+
+        val second = api.getAlbums(false)
+        printAlbums(second)
+        assertNotEquals(first, second)
+
+        val third = api.getAlbums(true)
+        printAlbums(third)
+        assertEquals(first, third)
+
+        val tracks = api.getAlbum(first[0].id, false)
         assert(tracks.isNotEmpty())
         printTracks(tracks)
     }

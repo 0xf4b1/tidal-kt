@@ -50,7 +50,7 @@ class Requests {
                     val modules = rows.getJSONObject(i).getJSONArray("modules")
                     for (j in 0 until modules.length()) {
                         val cur = modules.getJSONObject(j)
-                        if (cur.getString("type") == "TRACK_LIST")
+                        if (cur.getString("type") in listOf("TRACK_LIST", "ALBUM_ITEMS"))
                             return cur.getJSONObject("pagedList").getJSONArray("items")
                     }
                 }

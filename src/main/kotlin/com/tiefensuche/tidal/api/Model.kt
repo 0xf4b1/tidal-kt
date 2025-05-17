@@ -11,6 +11,14 @@ data class Artist(
     val url: String
 )
 
+data class Album(
+    val id: Long,
+    val name: String,
+    val artist: String,
+    val artwork: String,
+    val url: String
+)
+
 data class Track(
     val id: Long,
     val artist: String,
