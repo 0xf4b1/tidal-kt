@@ -33,5 +33,6 @@ data class Playlist(
     val uuid: String,
     val title: String,
     val duration: Long,
-    val artwork: String
+    val artwork: String,
+    var etag: String? = null
 )
