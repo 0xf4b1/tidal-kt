@@ -130,6 +130,10 @@ class TidalApi(val session: Session) {
         return parseFromJSONArray(tracks, ::buildTrackFromJSON)
     }
 
+    private fun getResourceUrl(id: String): String {
+        return TIDAL_RESOURCES_URL.format(id.replace("-", "/"))
+    }
+
     private fun <T> parseFromJSONArray(json: JSONArray, func: (json: JSONObject) -> T): List<T> {
         val result = mutableListOf<T>()
         for (j in 0 until json.length()) {
@@ -155,7 +159,7 @@ class TidalApi(val session: Session) {
             json.getJSONArray("artists").getJSONObject(0).getString("name"),
             json.getString("title"),
             json.getLong("duration") * 1000,
-            TIDAL_RESOURCES_URL.format(json.getJSONObject("album").getString("cover").replace("-", "/")),
+            getResourceUrl(json.getJSONObject("album").getString("cover")),
             json.getString("url"),
             session.likesTrackIds.contains(json.getLong("id"))
         )
@@ -165,7 +169,12 @@ class TidalApi(val session: Session) {
         return Artist(
             json.getLong("id"),
             json.getString("name"),
-            if (json.isNull("picture")) "null" else TIDAL_RESOURCES_URL.format(json.getString("picture").replace("-", "/")),
+            if (!json.isNull("picture"))
+                getResourceUrl(json.getString("picture"))
+            else if (!json.isNull("selectedAlbumCoverFallback"))
+                getResourceUrl(json.getString("selectedAlbumCoverFallback"))
+            else
+                "null",
             json.getString("url")
         )
     }
@@ -175,7 +184,10 @@ class TidalApi(val session: Session) {
             json.getLong("id"),
             json.getString("title"),
             json.getJSONObject("artist").getString("name"),
-            if (json.isNull("picture")) "null" else TIDAL_RESOURCES_URL.format(json.getString("picture").replace("-", "/")),
+            if (!json.isNull("cover"))
+                getResourceUrl(json.getString("cover"))
+            else
+                "null",
             json.getString("url")
         )
     }
