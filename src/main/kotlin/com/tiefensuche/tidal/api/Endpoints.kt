@@ -50,4 +50,8 @@ object Endpoints {
         "${TIDAL_API_BASE_URL}tracks/%s/playbackinfopostpaywall?audioquality=%s&playbackmode=STREAM&assetpresentation=FULL",
         Requests.Method.GET
     )
+    val CREATE_PLAYLIST = Requests.Endpoint("${TIDAL_LISTEN_BASE_URL}users/%s/playlists", Requests.Method.POST)
+    val DELETE_PLAYLIST = Requests.Endpoint("${TIDAL_LISTEN_BASE_URL}playlists/%s", Requests.Method.DELETE)
+    val PLAYLIST_ADD = Requests.Endpoint("${TIDAL_LISTEN_BASE_URL}playlists/%s/items", Requests.Method.POST)
+    val PLAYLIST_DELETE = Requests.Endpoint("${TIDAL_LISTEN_BASE_URL}playlists/%s/items/%s", Requests.Method.DELETE)
 }

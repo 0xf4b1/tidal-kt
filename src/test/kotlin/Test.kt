@@ -127,4 +127,16 @@ class Test {
         assertTrue(api.getAccessToken())
         println("access_token: ${api.session.accessToken}")
     }
+
+    @Test
+    fun testPlaylists() {
+        val playlist = api.createPlaylist("test", "test")
+        assertNotNull(playlist)
+        printPlaylists(listOf(playlist))
+        println("ETag: ${playlist.etag}")
+        val tracks = api.query("Solee", false)
+        assertTrue(api.playlistAdd(playlist.uuid, playlist.etag!!, tracks.map { track -> track.id }))
+//        assertTrue(api.playlistDelete(playlist.uuid, tracks[0].id))
+        assertTrue(api.deletePlaylist(playlist.uuid))
+    }
 }

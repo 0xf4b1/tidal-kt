@@ -256,6 +256,40 @@ class TidalApi(val session: Session) {
         throw NotStreamableException("Can not get stream url")
     }
 
+    fun createPlaylist(title: String, description: String = ""): Playlist? {
+        val result = WebRequests.post(
+            Endpoints.CREATE_PLAYLIST.route.format(session.userId),
+            "title=$title&description=$description", mapOf("Authorization" to "Bearer ${session.accessToken}")
+        )
+
+        if (result.status != 201)
+            return null
+
+        val playlist = buildPlaylistFromJSON(JSONObject(result.value))
+        playlist.etag = result.headers?.get("ETag")?.get(0)
+        return playlist
+    }
+
+    fun deletePlaylist(playlistId: String): Boolean {
+        val result = Requests.ActionRequest(this, Endpoints.DELETE_PLAYLIST, playlistId).execute()
+        return (result.status == 204)
+    }
+
+    fun playlistAdd(playlistId: String, etag: String, trackIds: List<Long>): Boolean {
+        val result = WebRequests.post(
+            Endpoints.PLAYLIST_ADD.route.format(playlistId),
+            "onArtifactNotFound=SKIP&onDupes=SKIP&trackIds=" + trackIds.joinToString(","),
+            mapOf("Authorization" to "Bearer ${session.accessToken}", "If-None-Match" to etag)
+        )
+        return (result.status == 200)
+    }
+
+    fun playlistDelete(playlistId: String, etag: String, trackId: Long): Boolean {
+        // FIXME: needs "If-None-Match" to etag header
+        val result = Requests.ActionRequest(this, Endpoints.PLAYLIST_DELETE, playlistId, trackId).execute()
+        return (result.status == 200)
+    }
+
     // Exception types
     class NotAuthenticatedException(message: String) : Exception(message)
     class NotStreamableException(message: String) : Exception(message)
