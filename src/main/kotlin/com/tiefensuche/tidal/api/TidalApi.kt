@@ -15,7 +15,7 @@ import kotlin.collections.HashSet
 
 class TidalApi(val session: Session) {
 
-    class Session(val clientId: String, var callback: ((session: Session) -> Unit)?) {
+    class Session(val clientId: String, val clientSecret: String, var callback: ((session: Session) -> Unit)?) {
         var userId: Long? = null
         var countryCode: String = "US"
         var locale: String = "en_US"
@@ -57,13 +57,15 @@ class TidalApi(val session: Session) {
         if (session.refreshToken == null && session.deviceCode == null)
             throw NotAuthenticatedException("Can not get access_token without refresh_token or device_code")
         try {
+            val auth = String(Base64.getEncoder().encode("${session.clientId}:${session.clientSecret}".toByteArray()))
             val res = JSONObject(
                 WebRequests.post(
                     Endpoints.OAUTH2_TOKEN,
                     "client_id=${session.clientId}" + (if (session.refreshToken != null) "&refresh_token=${session.refreshToken}" +
                             "&grant_type=refresh_token" else "&device_code=${session.deviceCode}" +
                             "&grant_type=urn:ietf:params:oauth:grant-type:device_code") +
-                            "&scope=r_usr+w_usr+w_sub"
+                            "&scope=r_usr+w_usr+w_sub",
+                    headers = mapOf("Authorization" to "Basic $auth")
                 ).value
             )
             if (res.has("access_token")) {

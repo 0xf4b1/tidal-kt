@@ -78,21 +78,28 @@ class Requests {
             ), "deviceType", session.deviceType
         )
 
-        fun request(url: String): WebRequests.Response {
+        fun request(url: String, data: String? = null, headers: Map<String, String>? = null): WebRequests.Response {
             if (session.accessToken == null) {
                 throw TidalApi.NotAuthenticatedException("Not authenticated!")
             }
             try {
-                return WebRequests.request(
-                    WebRequests.createConnection(
-                        url,
-                        endpoint.method.name,
-                        mapOf(
-                            "authorization" to "Bearer ${session.accessToken}",
-                            "x-tidal-client-version" to "2025.4.15"
-                        )
-                    )
+                val auth = mapOf(
+                    "authorization" to "Bearer ${session.accessToken}",
+                    "x-tidal-client-version" to "2025.4.15")
+                val requestHeaders = headers?.toMutableMap()?.let {
+                    it.putAll(auth)
+                    it
+                } ?: auth
+                val con = WebRequests.createConnection(
+                    url,
+                    endpoint.method.name,
+                    requestHeaders
                 )
+                if (data != null) {
+                    con.doOutput = true
+                    con.outputStream.write(data.toByteArray())
+                }
+                return WebRequests.request(con)
             } catch (e: WebRequests.HttpException) {
                 if (e.code == 401) {
                     session.accessToken = null
