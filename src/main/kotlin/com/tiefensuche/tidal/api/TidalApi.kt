@@ -265,6 +265,15 @@ class TidalApi(val session: Session) {
         throw NotStreamableException("Can not get stream url")
     }
 
+    fun getStreamManifest(id: Long): String {
+        val res = Requests.ActionRequest(this, Endpoints.STREAM, id, session.quality.name).execute()
+        if (res.status == 200) {
+            val json = JSONObject(res.value)
+            return String(Base64.getDecoder().decode(json.getString("manifest")))
+        }
+        throw NotStreamableException("Can not get stream manifest")
+    }
+
     fun createPlaylist(title: String, description: String = ""): Playlist? {
         val result = WebRequests.post(
             Endpoints.CREATE_PLAYLIST.route.format(session.userId),
