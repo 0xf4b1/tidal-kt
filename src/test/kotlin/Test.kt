@@ -8,7 +8,7 @@ import kotlin.test.Test
 
 class Test {
 
-    private val api = TidalApi(TidalApi.Session("foo", null))
+    private val api = TidalApi(TidalApi.Session("foo", "bar", null))
 
     private fun printArtists(artists: List<Artist>) {
         artists.forEach { println("id: ${it.id}, name: ${it.name}, artwork: ${it.artwork}, url: ${it.url}") }
@@ -29,6 +29,19 @@ class Test {
     @BeforeTest
     fun setAuth() {
         api.session.setAuth(1337, "US", "foo", "bar")
+    }
+
+    @Test
+    fun testAuth() {
+        val verificationUriComplete = api.auth()
+        println("verificationUriComplete: $verificationUriComplete")
+        while (true) {
+            println("Auth pending...")
+            if (api.getAccessToken())
+                break
+            Thread.sleep(5_000)
+        }
+        println("Auth complete.")
     }
 
     @Test
