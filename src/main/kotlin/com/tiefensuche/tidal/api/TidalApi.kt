@@ -149,13 +149,21 @@ class TidalApi(val session: Session) {
         return result
     }
 
+    private fun getArtistsString(json: JSONArray): String {
+        val artists = mutableListOf<String>()
+        for (i in 0 until json.length()) {
+            artists.add(json.getJSONObject(i).getString("name"))
+        }
+        return artists.joinToString()
+    }
+
     private fun buildTrackFromJSON(json: JSONObject): Track {
         if (session.likesTrackIds.isEmpty())
             getLikes()
 
         return Track(
             json.getLong("id"),
-            json.getJSONArray("artists").getJSONObject(0).getString("name"),
+            getArtistsString(json.getJSONArray("artists")),
             json.getString("title"),
             json.getLong("duration") * 1000,
             getResourceUrl(json.getJSONObject("album").getString("cover")),
