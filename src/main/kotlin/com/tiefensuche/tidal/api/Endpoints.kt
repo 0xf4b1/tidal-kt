@@ -6,7 +6,7 @@ package com.tiefensuche.tidal.api
 
 object Endpoints {
     const val TIDAL_API_BASE_URL = "https://api.tidalhifi.com/v1/"
-    const val TIDAL_LISTEN_BASE_URL = "https://listen.tidal.com/v1/"
+    const val TIDAL_LISTEN_BASE_URL = "https://tidal.com/v1/"
     const val TIDAL_RESOURCES_URL = "https://resources.tidal.com/images/%s/320x320.jpg"
 
     const val OAUTH2_BASE_URL = "https://auth.tidal.com/v1/oauth2/"
