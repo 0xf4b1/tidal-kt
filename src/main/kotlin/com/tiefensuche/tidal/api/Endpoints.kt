@@ -28,7 +28,7 @@ object Endpoints {
     val HOME =
         Requests.Endpoint("${TIDAL_LISTEN_BASE_URL}pages/home", Requests.Method.GET)
     val STATIC =
-        Requests.Endpoint("https://listen.tidal.com/v2/home/feed/static?platform=WEB", Requests.Method.GET)
+        Requests.Endpoint("https://tidal.com/v2/home/feed/static?platform=WEB", Requests.Method.GET)
     val PLAYLISTS =
         Requests.CollectionEndpoint("${TIDAL_LISTEN_BASE_URL}users/%s/playlists?order=DATE_UPDATED&orderDirection=DESC")
     val PLAYLIST =
